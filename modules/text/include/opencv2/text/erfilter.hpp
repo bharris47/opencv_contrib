@@ -345,6 +345,16 @@ CV_EXPORTS void MSERsToERStats(InputArray image, std::vector<std::vector<Point> 
 
 //! @}
 
+class CV_EXPORTS_W TextDetector {
+    public:
+            CV_WRAP TextDetector(String erPath1, String erPath2);
+            CV_WRAP virtual std::vector<Rect> getTextRegions(InputArray image);
+
+    private:
+            Ptr<ERFilter> erFilter1;
+            Ptr<ERFilter> erFilter2;
+};
+
 }
 }
 #endif // _OPENCV_TEXT_ERFILTER_HPP_

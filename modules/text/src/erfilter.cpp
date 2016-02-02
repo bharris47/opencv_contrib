@@ -4167,5 +4167,35 @@ void MSERsToERStats(InputArray image, vector<vector<Point> > &contours, vector<v
   }
 }
 
+TextDetector::TextDetector(String erPath1, String erPath2) {
+    erFilter1 = createERFilterNM1(loadClassifierNM1(erPath1), 16, 0.00015f, 0.13f, 0.2f, true, 0.1f);
+    erFilter2 = createERFilterNM2(loadClassifierNM2(erPath2), 0.5);
+}
+
+vector<Rect> TextDetector::getTextRegions(InputArray image) {
+    // Extract channels to be processed individually
+    vector<Mat> channels;
+    computeNMChannels(image, channels);
+
+    int cn = (int)channels.size();
+    // Append negative channels to detect ER- (bright regions over dark background)
+    for (int c = 0; c < cn-1; c++)
+        channels.push_back(255-channels[c]);
+
+    vector<vector<ERStat> > regions(channels.size());
+    // Apply the default cascade classifier to each independent channel (could be done in parallel)
+    for (int c=0; c<(int)channels.size(); c++)
+    {
+        erFilter1->run(channels[c], regions[c]);
+        erFilter2->run(channels[c], regions[c]);
+    }
+
+    // Detect character groups
+    vector< vector<Vec2i> > region_groups;
+    vector<Rect> groups_boxes;
+    erGrouping(image, channels, regions, region_groups, groups_boxes, ERGROUPING_ORIENTATION_HORIZ);
+    return groups_boxes;
+}
+
 }
 }
